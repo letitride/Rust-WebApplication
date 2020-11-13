@@ -13,6 +13,9 @@ migration
 $ diesel migration run --database-url postgresql://postgres:password@localhost:5432/log-collector
 ```
 
+```
+$ curl -v -H 'Content-Type: application/json' -d '{"user_agent":"Mozilla", "response_time":200}' localhost:3000/logs
+```
 
 マイグレートファイルの作成
 ```
