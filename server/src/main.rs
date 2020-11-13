@@ -5,6 +5,7 @@ use actix_web::App;
 extern crate diesel;
 mod schema;
 mod model;
+mod db;
 mod handlers;
 
 #[derive(Clone)]
