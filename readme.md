@@ -3,7 +3,7 @@ dieselを使用したpostgresqlのsetup
 $ cargo install diesel_cli --no-default-features --features postgres
 ```
 
-create database
+create database (.evnを導入した場合は、--database-urlは.envに記述できる)
 ```
 $ cd server && diesel setup  --database-url postgresql://postgres:password@localhost:5432/log-collector
 ```

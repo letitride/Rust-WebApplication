@@ -1,6 +1,10 @@
 use actix_web::http::Method;
 use actix_web::App;
 
+#[macro_use]
+extern crate diesel;
+mod schema;
+mod model;
 mod handlers;
 
 #[derive(Clone)]
@@ -24,7 +28,6 @@ pub fn app(server: Server) -> App<Server> {
 
 fn main() {
     env_logger::init();
-
     let server = Server::new();
     actix_web::server::new(move || app(server.clone()))
         .bind("localhost:3000")
