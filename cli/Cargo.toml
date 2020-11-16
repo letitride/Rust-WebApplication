@@ -8,3 +8,12 @@ edition = "2018"
 
 [dependencies]
 clap = "2"
+reqwest = "0.9"
+serde = "1"
+serde_json = "1"
+api = {path = "../api"}
+csv = "1"
+
+[dependencies.chrono]
+fetures = ["serde"]
+version = "0.4"

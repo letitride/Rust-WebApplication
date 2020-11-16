@@ -1,4 +1,28 @@
 use clap::{Arg, App, AppSettings, SubCommand, _clap_count_exprs, arg_enum};
+use reqwest::Client;
+use std::io;
+
+struct ApiClient {
+    server: String,
+    client: Client,
+}
+
+impl ApiClient {
+    fn post_logs(&self, req: &api::logs::post::Request) -> reqwest::Result<()> {
+        self.client
+            .post(&format!("http://{}/logs", &self.server))
+            .json(req)
+            .send()
+            .map(|_| ())
+    }
+
+    fn get_logs(&self) -> reqwest::Result<api::logs::get::Response> {
+        self.client
+            .get(&format!("http://{}/logs", &self.server))
+            .send()?
+            .json()
+    }
+}
 
 arg_enum! {
     #[derive(Debug)]
@@ -6,6 +30,25 @@ arg_enum! {
         Csv,
         Json,
     }
+}
+
+fn do_post_csv(api_client: &ApiClient) {
+    let reader = csv::Reader::from_reader(io::stdin());
+    for log in reader.into_deserialize::<api::logs::post::Request>() {
+        let log = match log {
+            Ok(log) => log,
+            Err(e) => {
+                eprintln!("[WARN] failed to parse a line, skipping: {}", e);
+                continue;
+            }
+        };
+        api_client.post_logs(&log).expect("api request failed");
+    }
+}
+fn do_get_json(api_client: &ApiClient) {
+    let res = api_client.get_logs().expect("api request failed");
+    let json_str = serde_json::to_string(&res).unwrap();
+    println!("{}", json_str);
 }
 
 fn main() {
@@ -36,20 +79,23 @@ fn main() {
         );
     
     let matches = opts.get_matches();
-    let server = matches.value_of("SERVER").unwrap_or("localhost:3000");
+    let server = matches.value_of("SERVER").unwrap_or("localhost:3000").into();
+    let client = Client::new();
+    let api_client = ApiClient {server, client};
+
     match matches.subcommand() {
-        ("get", sub_match) => {
+        ("get", Some(sub_match)) => {
             println!("get: {:?}", sub_match);
             let format = sub_match
-                .and_then(|m| m.value_of("FORMAT"))
+                .value_of("FORMAT")
                 .map(|m| m.parse().unwrap())
                 .unwrap();
             match format {
                 Format::Csv => unimplemented!(),
-                Format::Json => unimplemented!(),
+                Format::Json => do_get_json(&api_client),
             }
         },
-        ("post", sub_match) => println!("post: {:?}", sub_match),
-        _ => unreachable!(),
+        ("post", _) => do_post_csv(&api_client),
+        _ => {},
     }
 }
